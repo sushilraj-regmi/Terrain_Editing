@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.100.0/Cesium.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.100.0/Widgets/widgets.min.css" rel="stylesheet">
+  
+    <style>
+      html, body, #cesiumContainer {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .toolbar-left {
+            display: block;
+            position: absolute;
+            top: 5px;
+            left: 5px;
+        }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <script>
+    Cesium.Ion.defaultAccessToken =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0MDVlY2E2NS1mNWUwLTRlNDktOTk3Yy01NmM5OGFlN2U3MTUiLCJpZCI6MTE0NDkwLCJpYXQiOjE2NjgxMzA5MzN9.2anLJ9br359dFYrxy7ZEN6KJhDTzTkLl8UTsfxW8pbg";
+  
+   /* const esri = new Cesium.ArcGisMapServerImageryProvider({
+      url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+    });
+ */
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+     // imageryProvider: esri
+    });
+   
+    var terrainProvider = new Cesium.CesiumTerrainProvider({
+        url : './tiles1'
+     });
+    const layer = viewer.imageryLayers.addImageryProvider(
+  new Cesium.IonImageryProvider({ assetId: 1581392 })
+);
+    viewer.scene.terrainProvider = terrainProvider;
+    viewer.scene.globe.terrainExaggeration = 2.0;
+    viewer.extend(Cesium.viewerCesiumInspectorMixin);
+    // zoom to texel...
+    viewer.camera.setView({
+      destination : new Cesium.Cartesian3.fromDegrees(127.148406,37.449495, 50),
+      orientation: {
+        heading : Cesium.Math.toRadians(30),
+        pitch : Cesium.Math.toRadians(-20),
+        roll : 0.0
+      }
+    });
+
+    var points = [
+    {lat:37.447236415879765,lon:127.1489424997404},
+{lat:37.44723122736077,lon:127.1489667143757},
+{lat:37.44718213056697,lon:127.14895332662644},
+{lat:37.44718745858011,lon:127.14892575330371},
+{lat:37.44723537817597,lon:127.14894734266746},
+{lat:37.447234340472164,lon:127.14895218559452},
+{lat:37.44723330276837,lon:127.14895702852158},
+{lat:37.447232265064564,lon:127.14896187144865},
+{lat:37.44719725004004,lon:127.14892910259105},
+{lat:37.44720704149997,lon:127.1489324518784},
+{lat:37.4472168329599,lon:127.14893580116572},
+{lat:37.447226624419834,lon:127.14893915045306},
+{lat:37.44722140800201,lon:127.14896403682584},
+{lat:37.44721158864325,lon:127.148961359276},
+{lat:37.44720176928449,lon:127.14895868172614},
+{lat:37.44719194992573,lon:127.1489560041763},
+{lat:37.44719725004004,lon:127.14892910259105},
+{lat:37.44720704149997,lon:127.1489324518784},
+{lat:37.4472168329599,lon:127.14893580116572},
+{lat:37.447226624419834,lon:127.14893915045306},
+{lat:37.4471831961696,lon:127.14894781196189},
+{lat:37.44718426177223,lon:127.14894229729735},
+{lat:37.447185327374854,lon:127.1489367826328},
+{lat:37.447186392977486,lon:127.14893126796827},
+{lat:37.44719725004004,lon:127.14892910259105},
+{lat:37.44720704149997,lon:127.1489324518784},
+{lat:37.4472168329599,lon:127.14893580116572},
+{lat:37.447226624419834,lon:127.14893915045306},
+{lat:37.44719725004004,lon:127.14892910259105},
+{lat:37.44720704149997,lon:127.1489324518784},
+{lat:37.4472168329599,lon:127.14893580116572},
+{lat:37.447226624419834,lon:127.14893915045306},
+];
+
+// Create a billboard collection to hold the points
+for (var i = 0; i < points.length; i++) {
+    var point = points[i];
+    
+    var entity = viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(point.lon, point.lat),
+        point: {
+            pixelSize: 10,
+            color: Cesium.Color.RED
+        }
+    });
+}
+var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+var drawing = false;
+var positions = [];
+var pos=[];
+handler.setInputAction(function (movement) {
+
+var cur_pos = movement.position;
+
+var scene = viewer.scene;
+var pickedObject = scene.pick(cur_pos);
+
+if (scene.pickPositionSupported) {
+
+    if (scene.mode === Cesium.SceneMode.SCENE3D) {
+
+        var cartesian = viewer.scene.pickPosition(cur_pos);
+
+        if (Cesium.defined(cartesian)) {
+
+            // get current lat, lng, alt
+            var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+            var lat = Cesium.Math.toDegrees(cartographic.latitude);
+            var lng = Cesium.Math.toDegrees(cartographic.longitude);
+            var alt = parseFloat(cartographic.height);
+            poss=[lng,lat,alt]
+            pos.push(poss);
+
+            drawing = true;
+
+            if (drawing) {
+
+                if (positions.length === 0) {
+                    viewer.entities.removeAll();
+                } 
+                
+                positions.push(cartesian);
+                drawPolyline(positions);
+
+            }
+
+        }
+
+    } 
+}
+
+},Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+
+
+handler.setInputAction(function (e) {
+
+var scene = viewer.scene;
+
+if (scene.pickPositionSupported) {
+
+    if (scene.mode === Cesium.SceneMode.SCENE3D) {
+
+        var cartesian = viewer.scene.pickPosition(e.position);
+
+        if (Cesium.defined(cartesian)) {
+
+            var pickedObject = scene.pick(e.position);
+
+            if (drawing) {
+
+                var cur_pos = e.position;
+                positions.push(cartesian);
+
+                // get current lat, lng, alt
+                var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+                var lat = Cesium.Math.toDegrees(cartographic.latitude);
+                var lng = Cesium.Math.toDegrees(cartographic.longitude);
+                var alt = parseFloat(cartographic.height);
+                poss=[lng,lat,alt]
+                 pos.push(poss);
+                positions.push(positions[0]);
+                drawPolyline(positions);
+               // addTiff();
+            
+               // console.log(positions);
+                console.log(pos)
+                var pts = positions;
+                var pointsLength = pts.length - 1;
+
+                
+              
+                
+               pos = [];
+                drawing = false;
+                positions = [];
+
+            }
+
+         
+    } else if (!sceneModeWarningPosted) {
+        sceneModeWarningPosted = true;
+        console.log("pickPosition is currently only supported in 3D mode.");
+    }
+}
+}
+
+}, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+
+
+
+function drawPolyline(currentPositions) {
+
+polyline = viewer.entities.add({
+    polyline: {
+        positions: new Cesium.CallbackProperty(function () {
+            return currentPositions;
+        }, false),
+       // material: new Cesium.Color(Cesium.Color.WHITE),
+        width: 3,
+        //distanceDisplayCondition : new Cesium.DistanceDisplayCondition(0.0, depth_distance)
+    }
+});
+
+var oldPolylineUpdate = Cesium.PolylineCollection.prototype.update;
+Cesium.PolylineCollection.prototype.update = function (frameState) {
+    var oldMorphTime = frameState.morphTime;
+    frameState.morphTime = 0.0;
+    oldPolylineUpdate.call(this, frameState);
+    frameState.morphTime = oldMorphTime;
+};
+
+}
+  </script>
+</body>
+</html>
+
