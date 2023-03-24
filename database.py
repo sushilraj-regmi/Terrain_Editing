@@ -1,17 +1,12 @@
+import pickle
+from shapely.geometry import Point, Polygon
 import os
 import re
 import sqlite3
 from quantized_mesh_tile.global_geodetic import GlobalGeodetic
-from quantized_mesh_tile import decode,encode
-import quantized_mesh_tile
-from io import BytesIO
+from quantized_mesh_tile import decode, encode
 from quantized_mesh_tile.terrain import TerrainTile
 geodetic = GlobalGeodetic(True)
-import os
-import struct
-import pyproj
-from shapely.geometry import Point, Polygon
-import pickle
 # define the regular expression to extract boundary values
 
 
@@ -26,34 +21,32 @@ for root, dirs, files in os.walk('tiles1'):
             # print(file_path)
             # extract the boundary values from the file
             components = file_path.split(os.sep)
-            
+
 # Extract the z, x, and y values from the components
             z = int(components[1])
             x = int(components[2])
             y, _ = os.path.splitext(components[3])
             y = int(y)
             # print(f'z={z}, x={x}, y={y}')
-            
+
             [west, south, east, north] = bounds = geodetic.TileBounds(x, y, z)
-            tile = decode(file_path,bounds)
+            tile = decode(file_path, bounds)
             entry = {
-                'bounds': [(tile._west,tile._north),(tile._east,tile._north),(tile._east,tile._south),(tile._west,tile._south)],
+                'bounds': [(tile._west, tile._north), (tile._east, tile._north), (tile._east, tile._south), (tile._west, tile._south)],
                 'file_path': file_path
             }
 
             # # Add the dictionary to the list of dictionaries for this tile
             data_dict.setdefault((z, x, y), []).append(entry)
             # print(data_dict)
-           
-
 
 
 # create a SQLite database
 conn = sqlite3.connect('terrain_database.db')
 
 # create a table with columns for x, y, z, bounds, and file path
-# conn.execute('''CREATE TABLE terrainData1
-#              (x INTEGER, y INTEGER, z INTEGER, bounds BLOB, file_path TEXT);''')
+conn.execute('''CREATE TABLE terrainData1
+             (x INTEGER, y INTEGER, z INTEGER, bounds BLOB, file_path TEXT);''')
 
 # example dictionary
 
