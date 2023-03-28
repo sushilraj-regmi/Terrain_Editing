@@ -63,7 +63,7 @@ print("\n---------------\n")
 edited_qhei = [None]*len(tile.h)
 
 for i in range(len(qhei)):
-    edited_qhei[i] = int( ( ((orig_minheight - new_minheight)*ENCODING_MAX) + ((orig_maxheight - orig_minheight)*qhei[i]) ) / (new_maxheight - new_minheight) )
+    edited_qhei[i] = ( ((orig_minheight - new_minheight)*ENCODING_MAX) + ((orig_maxheight - orig_minheight)*qhei[i]) ) / (new_maxheight - new_minheight)
 
 print("EDITED QHEI\n---------------\n")
 print(edited_qhei)
